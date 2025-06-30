@@ -5,10 +5,15 @@ import { PDFDocument, StandardFonts, rgb, PageSizes, ColorUtils } from './index.
 function App() {
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const generateSimplePDF = useCallback(async () => {
     setIsGenerating(true);
+    setError(null);
+    
     try {
+      console.log('Starting PDF generation...');
+      
       const doc = await PDFDocument.create({
         title: 'VibePDF Demo Document',
         author: 'VibePDF Library',
@@ -16,11 +21,18 @@ function App() {
         creator: 'VibePDF Demo App'
       });
 
+      console.log('Document created, adding page...');
+      
       const page = doc.addPage(PageSizes.A4);
+      
+      console.log('Page added, embedding font...');
+      
       const font = await doc.embedFont(StandardFonts.HelveticaBold);
       
       // Add font to page
       page.addFont(font);
+      
+      console.log('Font embedded, adding content...');
       
       // Title
       page.drawText('VibePDF Library Demo', {
@@ -50,17 +62,17 @@ function App() {
       });
 
       const features = [
-        '• Pure TypeScript 5.8.3 implementation',
-        '• PDF 2.0 and PDF/A compliance',
-        '• High-performance rendering engine',
-        '• Digital signatures and encryption',
-        '• Interactive forms and annotations',
-        '• Font embedding and subsetting',
-        '• Zero runtime dependencies'
+        'Pure TypeScript 5.8.3 implementation',
+        'PDF 2.0 and PDF/A compliance',
+        'High-performance rendering engine',
+        'Digital signatures and encryption',
+        'Interactive forms and annotations',
+        'Font embedding and subsetting',
+        'Zero runtime dependencies'
       ];
 
       features.forEach((feature, index) => {
-        page.drawText(feature, {
+        page.drawText(`• ${feature}`, {
           x: 70,
           y: 650 - (index * 20),
           size: 12,
@@ -87,9 +99,17 @@ function App() {
         font: StandardFonts.HelveticaBold
       });
 
-      page.drawText('Rectangles, lines, circles\nand complex vector graphics', {
+      page.drawText('Rectangles, lines, circles', {
         x: 60,
-        y: 430,
+        y: 440,
+        size: 10,
+        color: rgb(0.3, 0.3, 0.3),
+        font: StandardFonts.Helvetica
+      });
+
+      page.drawText('and complex vector graphics', {
+        x: 60,
+        y: 425,
         size: 10,
         color: rgb(0.3, 0.3, 0.3),
         font: StandardFonts.Helvetica
@@ -126,12 +146,20 @@ function App() {
         font: StandardFonts.Helvetica
       });
 
+      console.log('Content added, saving PDF...');
+      
       const pdfBytes = await doc.save();
+      
+      console.log('PDF saved, creating blob...');
+      
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       setPdfBlob(blob);
+      
+      console.log('PDF generation completed successfully!');
+      
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Check console for details.');
+      setError(`Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGenerating(false);
     }
@@ -140,14 +168,19 @@ function App() {
   const downloadPDF = useCallback(() => {
     if (!pdfBlob) return;
     
-    const url = URL.createObjectURL(pdfBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'vibepdf-demo.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'vibepdf-demo.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      setError(`Error downloading PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }, [pdfBlob]);
 
   return (
@@ -186,6 +219,12 @@ function App() {
             standards compliance, and zero dependencies. Built for modern web applications.
           </p>
           
+          {error && (
+            <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+          
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <button
               onClick={generateSimplePDF}
@@ -211,11 +250,17 @@ function App() {
           {pdfBlob && (
             <div className="bg-white rounded-xl shadow-xl p-6 max-w-4xl mx-auto">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">PDF Preview</h3>
-              <iframe
-                src={URL.createObjectURL(pdfBlob)}
-                className="w-full h-96 border border-gray-200 rounded-lg"
-                title="PDF Preview"
-              />
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <iframe
+                  src={URL.createObjectURL(pdfBlob)}
+                  className="w-full h-96"
+                  title="PDF Preview"
+                  style={{ minHeight: '600px' }}
+                />
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                PDF generated successfully! You can view it above or download it using the button.
+              </p>
             </div>
           )}
         </div>
