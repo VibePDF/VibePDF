@@ -1763,7 +1763,7 @@ const pdfBytes = await doc.save();`}</code>
           <div className="mt-4">
             <a href="https://bolt.new" target="_blank" rel="noopener noreferrer" className="inline-flex items-center space-x-1 text-xs text-gray-500 hover:text-gray-700 transition-colors">
               <span>Built with</span>
-              <img src="https://bolt.new/badge.svg" alt="Built with Bolt.new" className="h-4" />
+              <img src="/white_circle_360x360.png" alt="Built with Bolt.new" className="h-13" />
             </a>
           </div>
         </div>
