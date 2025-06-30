@@ -801,7 +801,7 @@ export const startCollaboration = async (document: any, owner: any, options?: an
   return collaboration.createSession(document, owner, options);
 };
 
-export const createWorkflow = async (workflow: any) => {
+export const createAutomationWorkflow = async (workflow: any) => {
   const automation = new PDFAutomationEngine();
   return automation.createWorkflow(workflow);
 };
