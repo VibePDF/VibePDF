@@ -625,6 +625,14 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Bolt.new Badge - Top */}
+      <div className="flex justify-center py-2 bg-white shadow-sm">
+        <a href="https://bolt.new" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-1 text-xs text-gray-600 hover:text-gray-900 transition-colors">
+          <span>Built with</span>
+          <img src="https://bolt.new/badge.svg" alt="Built with Bolt.new" className="h-4" />
+        </a>
+      </div>
+
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -949,6 +957,14 @@ const generatePDF = async () => {
           <p className="text-gray-400 text-sm mt-2">
             AGPL-3.0 License • Built with TypeScript 5.8.3 • Zero Dependencies
           </p>
+          
+          {/* Bolt.new Badge - Bottom */}
+          <div className="mt-4">
+            <a href="https://bolt.new" target="_blank" rel="noopener noreferrer" className="inline-flex items-center space-x-1 text-xs text-gray-500 hover:text-gray-700 transition-colors">
+              <span>Built with</span>
+              <img src="https://bolt.new/badge.svg" alt="Built with Bolt.new" className="h-4" />
+            </a>
+          </div>
         </div>
       </footer>
     </div>
