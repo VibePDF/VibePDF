@@ -272,10 +272,21 @@ export enum ComplianceLevel {
   PDF_A_3A = 'PDF/A-3a',
   PDF_A_3B = 'PDF/A-3b',
   PDF_A_3U = 'PDF/A-3u',
+  PDF_A_4 = 'PDF/A-4',
+  PDF_A_4E = 'PDF/A-4e',
+  PDF_A_4F = 'PDF/A-4f',
   PDF_UA_1 = 'PDF/UA-1',
+  PDF_UA_2 = 'PDF/UA-2',
   PDF_X_1A = 'PDF/X-1a',
   PDF_X_3 = 'PDF/X-3',
-  PDF_X_4 = 'PDF/X-4'
+  PDF_X_4 = 'PDF/X-4',
+  PDF_X_5G = 'PDF/X-5g',
+  PDF_X_5N = 'PDF/X-5n',
+  PDF_X_5PG = 'PDF/X-5pg',
+  PDF_VT_1 = 'PDF/VT-1',
+  PDF_VT_2 = 'PDF/VT-2',
+  PDF_E_1 = 'PDF/E-1',
+  PDF_E_2 = 'PDF/E-2'
 }
 
 // Rendering Options
@@ -468,4 +479,209 @@ export interface PDFImportOptions {
   extractMetadata?: boolean;
   validateStructure?: boolean;
   repairErrors?: boolean;
+}
+
+// PDF 2.0 Specific Types
+export interface PDF20Features {
+  richMedia?: boolean;
+  associatedFiles?: boolean;
+  collections?: boolean;
+  enhancedEncryption?: boolean;
+  enhancedSignatures?: boolean;
+  enhancedAccessibility?: boolean;
+  enhancedForms?: boolean;
+  enhancedColorManagement?: boolean;
+  enhancedTransparency?: boolean;
+  enhancedMetadata?: boolean;
+}
+
+export interface PDF20Metadata extends PDFMetadata {
+  conformanceLevel?: string;
+  pdfVersion?: '2.0';
+  extensions?: string[];
+  associatedFiles?: AssociatedFile[];
+  collections?: Collection[];
+}
+
+export interface AssociatedFile {
+  filename: string;
+  description?: string;
+  relationship: 'Source' | 'Data' | 'Alternative' | 'Supplement' | 'EncryptedPayload' | 'FormData' | 'Schema' | 'Unspecified';
+  mimeType?: string;
+  creationDate?: Date;
+  modificationDate?: Date;
+  checksum?: string;
+  size?: number;
+}
+
+export interface Collection {
+  schema: CollectionSchema;
+  items: CollectionItem[];
+  defaultSort?: string;
+  view?: 'Details' | 'Tile' | 'Hidden';
+}
+
+export interface CollectionSchema {
+  [fieldName: string]: CollectionField;
+}
+
+export interface CollectionField {
+  type: 'Text' | 'Date' | 'Number' | 'Filename' | 'Desc' | 'ModDate' | 'CreationDate' | 'Size';
+  name: string;
+  order?: number;
+  visible?: boolean;
+  editable?: boolean;
+}
+
+export interface CollectionItem {
+  filename: string;
+  fields: { [fieldName: string]: any };
+  associatedFiles?: AssociatedFile[];
+}
+
+// Enhanced Security Types for PDF 2.0
+export interface PDF20EncryptionOptions extends EncryptionOptions {
+  version?: '2.0';
+  encryptionRevision?: 6;
+  keyLength?: 256;
+  streamEncryption?: boolean;
+  stringEncryption?: boolean;
+  embeddedFileEncryption?: boolean;
+  authenticatedEncryption?: boolean;
+}
+
+export interface PDF20DigitalSignature {
+  version: '2.0';
+  signatureType: 'approval' | 'certification' | 'usage_rights';
+  hashAlgorithm: 'SHA-256' | 'SHA-384' | 'SHA-512';
+  encryptionAlgorithm: 'RSA' | 'ECDSA' | 'EdDSA';
+  timestampServer?: string;
+  longTermValidation?: boolean;
+  documentTimeStamp?: boolean;
+  signaturePolicy?: string;
+  commitmentType?: string[];
+  signerLocation?: string;
+  signerContactInfo?: string;
+  reason?: string;
+}
+
+// Enhanced Accessibility Types for PDF 2.0
+export interface PDF20AccessibilityFeatures {
+  structureVersion?: '2.0';
+  enhancedTagging?: boolean;
+  associatedContent?: boolean;
+  alternativeDescriptions?: boolean;
+  languageIdentification?: boolean;
+  readingOrder?: boolean;
+  colorContrast?: boolean;
+  keyboardNavigation?: boolean;
+  screenReaderSupport?: boolean;
+}
+
+export interface PDF20StructureElement {
+  type: string;
+  id?: string;
+  title?: string;
+  lang?: string;
+  alt?: string;
+  actualText?: string;
+  expansion?: string;
+  associatedFiles?: AssociatedFile[];
+  children?: PDF20StructureElement[];
+  attributes?: { [key: string]: any };
+}
+
+// Enhanced Forms Types for PDF 2.0
+export interface PDF20FormField {
+  type: 'text' | 'button' | 'choice' | 'signature' | 'barcode';
+  name: string;
+  value?: any;
+  defaultValue?: any;
+  required?: boolean;
+  readOnly?: boolean;
+  richText?: boolean;
+  multiline?: boolean;
+  password?: boolean;
+  fileSelect?: boolean;
+  doNotSpellCheck?: boolean;
+  doNotScroll?: boolean;
+  comb?: boolean;
+  richTextValue?: string;
+  richTextDefaultValue?: string;
+  maxLength?: number;
+  quadding?: 'left' | 'center' | 'right';
+  actions?: FormAction[];
+  calculation?: FormCalculation;
+  validation?: FormValidation;
+  format?: FormFormat;
+}
+
+export interface FormAction {
+  trigger: 'keystroke' | 'format' | 'validate' | 'calculate' | 'focus' | 'blur' | 'mousedown' | 'mouseup';
+  script: string;
+  scriptType?: 'javascript' | 'formcalc';
+}
+
+export interface FormCalculation {
+  order: number;
+  script: string;
+  scriptType?: 'javascript' | 'formcalc';
+}
+
+export interface FormValidation {
+  script: string;
+  scriptType?: 'javascript' | 'formcalc';
+  message?: string;
+}
+
+export interface FormFormat {
+  category: 'number' | 'percent' | 'date' | 'time' | 'text' | 'special' | 'custom';
+  pattern?: string;
+  locale?: string;
+  decimals?: number;
+  currency?: string;
+  dateFormat?: string;
+  timeFormat?: string;
+}
+
+// Enhanced Color Management for PDF 2.0
+export interface PDF20ColorSpace {
+  type: 'DeviceGray' | 'DeviceRGB' | 'DeviceCMYK' | 'CalGray' | 'CalRGB' | 'Lab' | 'ICCBased' | 'Indexed' | 'Pattern' | 'Separation' | 'DeviceN' | 'Named';
+  name?: string;
+  iccProfile?: ICC_Profile;
+  alternateSpace?: PDF20ColorSpace;
+  components?: number;
+  range?: number[];
+  gamma?: number;
+  whitePoint?: number[];
+  blackPoint?: number[];
+  matrix?: number[];
+}
+
+export interface ICC_Profile {
+  version: string;
+  deviceClass: 'input' | 'display' | 'output' | 'devicelink' | 'colorspace' | 'abstract' | 'namedcolor';
+  colorSpace: 'XYZ' | 'Lab' | 'Luv' | 'YCbCr' | 'Yxy' | 'RGB' | 'GRAY' | 'HSV' | 'HLS' | 'CMYK' | 'CMY';
+  connectionSpace: 'XYZ' | 'Lab';
+  platform: 'APPL' | 'MSFT' | 'SGI' | 'SUNW' | 'TGNT';
+  flags?: number;
+  manufacturer?: string;
+  model?: string;
+  attributes?: number;
+  renderingIntent?: 'perceptual' | 'relative' | 'saturation' | 'absolute';
+  illuminant?: number[];
+  creator?: string;
+  description?: string;
+  copyright?: string;
+  data: Uint8Array;
+}
+
+export interface PDF20OutputIntent {
+  type: 'GTS_PDFX' | 'GTS_PDFA1' | 'ISO_PDFE1' | 'GTS_PDFVT1' | 'Custom';
+  outputCondition?: string;
+  outputConditionIdentifier?: string;
+  registryName?: string;
+  info?: string;
+  destOutputProfile?: ICC_Profile;
+  destOutputProfileRef?: PDFRef;
 }

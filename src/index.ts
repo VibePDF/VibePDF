@@ -41,6 +41,26 @@ export {
   type QualityRule,
   type PDFExportOptions,
   type PDFImportOptions,
+  // PDF 2.0 types
+  type PDF20Features,
+  type PDF20Metadata,
+  type AssociatedFile,
+  type Collection,
+  type CollectionSchema,
+  type CollectionField,
+  type CollectionItem,
+  type PDF20EncryptionOptions,
+  type PDF20DigitalSignature,
+  type PDF20AccessibilityFeatures,
+  type PDF20StructureElement,
+  type PDF20FormField,
+  type FormAction,
+  type FormCalculation,
+  type FormValidation,
+  type FormFormat,
+  type PDF20ColorSpace,
+  type ICC_Profile,
+  type PDF20OutputIntent,
   StandardFonts,
   PageSizes,
   ComplianceLevel,
@@ -115,6 +135,14 @@ export {
   type ComplianceWarning
 } from './standards/PDFCompliance.js';
 
+// PDF 2.0 compliance
+export {
+  PDF20ComplianceManager,
+  PDF20DocumentCreator,
+  PDF20Feature,
+  type PDF20ComplianceOptions
+} from './standards/PDF20Compliance.js';
+
 // Optimization
 export {
   PDFOptimizer,
@@ -123,6 +151,37 @@ export {
   type OptimizationResult,
   type OptimizationStep
 } from './optimization/PDFOptimizer.js';
+
+// Core infrastructure
+export {
+  PDFWriter,
+  IncrementalWriter,
+  type WriteOptions
+} from './core/PDFWriter.js';
+
+export {
+  PDFContentStream,
+  type GraphicsState
+} from './core/PDFContentStream.js';
+
+export {
+  PDFResourceManager,
+  ExtendedGraphicsState,
+  type ResourceEntry
+} from './core/PDFResources.js';
+
+export {
+  PDFPageTree,
+  PDFPageTreeNode,
+  type PageTreeNode
+} from './document/PDFPageTree.js';
+
+// Compression
+export {
+  CompressionEngine,
+  CompressionUtils,
+  type CompressionResult
+} from './compression/CompressionEngine.js';
 
 // Utility functions and classes
 export { ColorUtils } from './utils/ColorUtils.js';
@@ -191,16 +250,17 @@ export const VIBEPDF_INFO = {
     'Compression optimization'
   ],
   capabilities: {
-    'PDF Standards': ['PDF 2.0', 'PDF 1.7', 'PDF/A-1/2/3', 'PDF/UA-1', 'PDF/X-1a/3/4'],
+    'PDF Standards': ['PDF 2.0', 'PDF 1.7', 'PDF/A-1/2/3/4', 'PDF/UA-1/2', 'PDF/X-1a/3/4/5', 'PDF/VT-1/2', 'PDF/E-1/2'],
     'Security': ['AES-256', 'AES-128', 'RC4', 'Digital Signatures', 'Permissions', 'Access Control'],
     'Forms': ['AcroForm', 'All Field Types', 'Dynamic Generation', 'Validation', 'XFA Support'],
-    'Annotations': ['Text', 'Link', 'Highlight', 'FreeText', 'Stamp', 'Ink', 'Markup', 'Widget'],
+    'Annotations': ['Text', 'Link', 'Highlight', 'FreeText', 'Stamp', 'Ink', 'Markup', 'Widget', 'RichMedia'],
     'Rendering': ['Canvas 2D', 'WebGL', 'OffscreenCanvas', 'Text Extraction', 'Search', 'Zoom'],
     'Optimization': ['Compression', 'Image Optimization', 'Font Subsetting', 'Linearization', 'Object Merging'],
     'Accessibility': ['Tagged PDFs', 'Structure Trees', 'Alternative Text', 'Reading Order', 'Language Support'],
     'Compliance': ['PDF/A Validation', 'PDF/UA Validation', 'PDF/X Validation', 'Custom Rules'],
     'Performance': ['Memory Management', 'Object Pooling', 'Streaming', 'Batch Operations'],
-    'Quality': ['Document Analysis', 'Validation Rules', 'Quality Profiles', 'Automated Testing']
+    'Quality': ['Document Analysis', 'Validation Rules', 'Quality Profiles', 'Automated Testing'],
+    'PDF 2.0': ['Rich Media', 'Associated Files', 'Collections', 'Enhanced Security', 'Enhanced Accessibility']
   },
   performance: {
     'Bundle Size': '< 300KB (min+gzip)',
@@ -228,6 +288,7 @@ export const ENTERPRISE_FEATURES = {
   PDF_A_COMPLIANCE: true,
   PDF_UA_ACCESSIBILITY: true,
   PDF_X_PREPRESS: true,
+  PDF_2_0_SUPPORT: true,
   ADVANCED_FORMS: true,
   WEBGL_RENDERING: true,
   FONT_SUBSETTING: true,
@@ -242,7 +303,17 @@ export const ENTERPRISE_FEATURES = {
   STREAMING_SUPPORT: true,
   BATCH_PROCESSING: true,
   CUSTOM_VALIDATION: true,
-  ACCESS_CONTROL: true
+  ACCESS_CONTROL: true,
+  RICH_MEDIA: true,
+  ASSOCIATED_FILES: true,
+  COLLECTIONS: true,
+  ENHANCED_ENCRYPTION: true,
+  ENHANCED_SIGNATURES: true,
+  ENHANCED_ACCESSIBILITY: true,
+  ENHANCED_FORMS: true,
+  ENHANCED_COLOR_MANAGEMENT: true,
+  ENHANCED_TRANSPARENCY: true,
+  ENHANCED_METADATA: true
 } as const;
 
 // Quality assurance profiles
@@ -252,7 +323,8 @@ export const QUALITY_PROFILES = {
   ARCHIVAL: 'archival',
   PRINT: 'print',
   WEB: 'web',
-  MOBILE: 'mobile'
+  MOBILE: 'mobile',
+  PDF_2_0: 'pdf_2_0'
 } as const;
 
 // Security levels
@@ -277,6 +349,7 @@ export const createValidator = () => new PDFValidator();
 export const createPerformanceMonitor = () => new PerformanceMonitor();
 export const createSecurityManager = () => SecurityManager;
 export const createMemoryManager = () => MemoryManager.getInstance();
+export const createPDF20ComplianceManager = (options?: Partial<PDF20ComplianceOptions>) => new PDF20ComplianceManager(options);
 
 // Configuration presets
 export const PRESETS = {
@@ -307,5 +380,49 @@ export const PRESETS = {
     linearize: true,
     embedFonts: true,
     subset: true
+  },
+  PDF_2_0_COMPLIANT: {
+    version: '2.0',
+    compression: CompressionType.FlateDecode,
+    imageQuality: 90,
+    linearize: true,
+    embedFonts: true,
+    subset: true,
+    enabledFeatures: [
+      'enhanced_accessibility',
+      'enhanced_security',
+      'enhanced_metadata'
+    ]
   }
 } as const;
+
+// PDF 2.0 specific exports
+export const PDF_2_0_FEATURES = {
+  RICH_MEDIA: 'rich_media',
+  ENHANCED_ANNOTATIONS: 'enhanced_annotations',
+  IMPROVED_ACCESSIBILITY: 'improved_accessibility',
+  AES_256_ENCRYPTION: 'aes_256_encryption',
+  DIGITAL_SIGNATURES_V2: 'digital_signatures_v2',
+  COLLECTION_ITEMS: 'collection_items',
+  PORTABLE_COLLECTIONS: 'portable_collections',
+  ASSOCIATED_FILES: 'associated_files',
+  RICH_TEXT_FIELDS: 'rich_text_fields',
+  SIGNATURE_FIELDS_V2: 'signature_fields_v2',
+  NAMED_COLOR_SPACES: 'named_color_spaces',
+  OUTPUT_INTENTS_V2: 'output_intents_v2',
+  TRANSPARENCY_V2: 'transparency_v2',
+  BLEND_MODES_V2: 'blend_modes_v2',
+  XMP_METADATA_V2: 'xmp_metadata_v2',
+  STRUCTURE_ELEMENTS_V2: 'structure_elements_v2'
+} as const;
+
+// Compliance validation shortcuts
+export const validatePDF20 = (document: any, options?: Partial<PDF20ComplianceOptions>) => {
+  const manager = new PDF20ComplianceManager(options);
+  return manager.validatePDF20Document(document);
+};
+
+export const createPDF20Document = (metadata: PDFMetadata, options?: Partial<PDF20ComplianceOptions>) => {
+  const creator = new PDF20DocumentCreator(options);
+  return creator.createPDF20Document(metadata);
+};
