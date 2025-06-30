@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { Download, FileText, Zap, Shield, Palette, Settings, Type, Shapes, Layout } from 'lucide-react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Download, FileText, Zap, Shield, Palette, Settings, Type, Shapes, Layout, Eye, EyeOff } from 'lucide-react';
 import { PDFDocument, StandardFonts, rgb, PageSizes, ColorUtils } from './index.js';
 
 function App() {
@@ -7,6 +7,14 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [demoType, setDemoType] = useState<'basic' | 'advanced' | 'text'>('basic');
+  const [showPreview, setShowPreview] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Clear PDF blob when demo type changes
+  useEffect(() => {
+    setPdfBlob(null);
+    setError(null);
+  }, [demoType]);
 
   const generateBasicPDF = useCallback(async () => {
     setIsGenerating(true);
@@ -575,6 +583,31 @@ function App() {
     }
   }, [pdfBlob, demoType]);
 
+  const openPDFInNewTab = useCallback(() => {
+    if (!pdfBlob) return;
+    
+    try {
+      const url = URL.createObjectURL(pdfBlob);
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error('Error opening PDF:', error);
+      setError(`Error opening PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }, [pdfBlob]);
+
+  const getDemoDescription = (type: string) => {
+    switch (type) {
+      case 'basic':
+        return 'Text, shapes, lines, and basic graphics';
+      case 'advanced':
+        return 'Rounded rectangles, ellipses, polygons, transparency';
+      case 'text':
+        return 'Text wrapping, alignment, styled blocks, typography';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -623,36 +656,45 @@ function App() {
             <div className="flex flex-wrap justify-center gap-4">
               <button
                 onClick={() => setDemoType('basic')}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                className={`flex flex-col items-center space-y-2 px-6 py-4 rounded-lg font-medium transition-all duration-200 ${
                   demoType === 'basic'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    ? 'bg-blue-600 text-white shadow-lg transform scale-105'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:shadow-md'
                 }`}
               >
-                <FileText className="w-5 h-5" />
-                <span>Basic Features</span>
+                <FileText className="w-6 h-6" />
+                <div className="text-center">
+                  <div className="font-semibold">Basic Features</div>
+                  <div className="text-xs opacity-75">{getDemoDescription('basic')}</div>
+                </div>
               </button>
               <button
                 onClick={() => setDemoType('advanced')}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                className={`flex flex-col items-center space-y-2 px-6 py-4 rounded-lg font-medium transition-all duration-200 ${
                   demoType === 'advanced'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    ? 'bg-blue-600 text-white shadow-lg transform scale-105'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:shadow-md'
                 }`}
               >
-                <Shapes className="w-5 h-5" />
-                <span>Advanced Graphics</span>
+                <Shapes className="w-6 h-6" />
+                <div className="text-center">
+                  <div className="font-semibold">Advanced Graphics</div>
+                  <div className="text-xs opacity-75">{getDemoDescription('advanced')}</div>
+                </div>
               </button>
               <button
                 onClick={() => setDemoType('text')}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                className={`flex flex-col items-center space-y-2 px-6 py-4 rounded-lg font-medium transition-all duration-200 ${
                   demoType === 'text'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    ? 'bg-blue-600 text-white shadow-lg transform scale-105'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:shadow-md'
                 }`}
               >
-                <Type className="w-5 h-5" />
-                <span>Typography</span>
+                <Type className="w-6 h-6" />
+                <div className="text-center">
+                  <div className="font-semibold">Typography</div>
+                  <div className="text-xs opacity-75">{getDemoDescription('text')}</div>
+                </div>
               </button>
             </div>
           </div>
@@ -668,31 +710,70 @@ function App() {
             </button>
             
             {pdfBlob && (
-              <button
-                onClick={downloadPDF}
-                className="bg-green-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg flex items-center justify-center space-x-2"
-              >
-                <Download className="w-5 h-5" />
-                <span>Download PDF</span>
-              </button>
+              <>
+                <button
+                  onClick={downloadPDF}
+                  className="bg-green-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg flex items-center justify-center space-x-2"
+                >
+                  <Download className="w-5 h-5" />
+                  <span>Download PDF</span>
+                </button>
+                
+                <button
+                  onClick={openPDFInNewTab}
+                  className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg flex items-center justify-center space-x-2"
+                >
+                  <Eye className="w-5 h-5" />
+                  <span>Open in New Tab</span>
+                </button>
+              </>
             )}
           </div>
 
           {/* PDF Preview */}
           {pdfBlob && (
             <div className="bg-white rounded-xl shadow-xl p-6 max-w-4xl mx-auto">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">PDF Preview</h3>
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <iframe
-                  src={URL.createObjectURL(pdfBlob)}
-                  className="w-full h-96"
-                  title="PDF Preview"
-                  style={{ minHeight: '600px' }}
-                />
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">PDF Preview</h3>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setShowPreview(!showPreview)}
+                    className="flex items-center space-x-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                  >
+                    {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    <span>{showPreview ? 'Hide' : 'Show'} Preview</span>
+                  </button>
+                </div>
               </div>
-              <p className="text-sm text-gray-500 mt-2">
-                PDF generated successfully! You can view it above or download it using the button.
-              </p>
+              
+              {showPreview && (
+                <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                  <iframe
+                    ref={iframeRef}
+                    src={`${URL.createObjectURL(pdfBlob)}#toolbar=0&navpanes=0&scrollbar=0`}
+                    className="w-full h-96"
+                    title="PDF Preview"
+                    style={{ 
+                      minHeight: '600px',
+                      border: 'none'
+                    }}
+                    sandbox="allow-same-origin allow-scripts"
+                  />
+                </div>
+              )}
+              
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <p className="text-sm text-green-700 font-medium">
+                    PDF generated successfully! 
+                  </p>
+                </div>
+                <p className="text-xs text-green-600 mt-1">
+                  Content is rendering correctly. If you see drawing tools, they're from your browser's PDF viewer - not our library.
+                  Try "Open in New Tab" for a cleaner view or download the PDF to view in your preferred PDF reader.
+                </p>
+              </div>
             </div>
           )}
         </div>
