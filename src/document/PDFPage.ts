@@ -14,9 +14,7 @@ import {
   Size
 } from '../types/index.js';
 import { PDFObject, PDFObjectId } from '../core/PDFObject.js';
-import { PDFStreamProcessor } from '../core/PDFStream.js';
 import { PDFFont } from '../fonts/PDFFont.js';
-import { Matrix } from '../utils/MathUtils.js';
 
 export interface TextBlock {
   text: string;
@@ -38,8 +36,6 @@ export class PDFPage {
     Shading: {}
   };
   private fonts: Map<string, PDFFont> = new Map();
-  private transformStack: Matrix[] = [];
-  private currentTransform = Matrix.identity();
 
   constructor(
     private id: PDFObjectId,
@@ -60,16 +56,14 @@ export class PDFPage {
       align = 'left'
     } = options;
 
-    this.saveGraphicsState();
-    
+    console.log(`Drawing text: "${text}" at (${x}, ${y}) with font ${font}, size ${size}`);
+
     // Handle text wrapping if maxWidth is specified
     if (maxWidth) {
       this.drawWrappedText(text, x, y, maxWidth, size, font, color, align, lineHeight);
     } else {
       this.drawSingleLineText(text, x, y, size, font, color);
     }
-    
-    this.restoreGraphicsState();
   }
 
   drawTextBlock(text: string, options: TextOptions & {
@@ -101,7 +95,7 @@ export class PDFPage {
 
     // Calculate text dimensions
     const lines = this.wrapText(text, maxWidth - actualPadding.left - actualPadding.right, size, font);
-    const actualLineHeight = lineHeight || this.getFont(font)?.getLineHeight(size) || size * 1.2;
+    const actualLineHeight = lineHeight || size * 1.2;
     const textHeight = lines.length * actualLineHeight;
     const blockWidth = maxWidth;
     const blockHeight = textHeight + actualPadding.top + actualPadding.bottom;
@@ -166,8 +160,7 @@ export class PDFPage {
     lineHeight?: number
   ): void {
     const lines = this.wrapText(text, maxWidth, size, font);
-    const fontObj = this.getFont(font);
-    const actualLineHeight = lineHeight || fontObj?.getLineHeight(size) || size * 1.2;
+    const actualLineHeight = lineHeight || size * 1.2;
     
     this.contentOperations.push('BT');
     this.setTextColor(color);
@@ -215,16 +208,13 @@ export class PDFPage {
     const totalSpaceWidth = maxWidth - totalTextWidth;
     const spaceWidth = totalSpaceWidth / (words.length - 1);
 
-    let currentX = x;
-    this.contentOperations.push(`${currentX} ${y} Td`);
+    this.contentOperations.push(`${x} ${y} Td`);
     
     for (let i = 0; i < words.length; i++) {
       this.contentOperations.push(`(${this.escapeString(words[i])}) Tj`);
       
       if (i < words.length - 1) {
         // Move to next word position
-        const wordWidth = this.measureText(words[i], size, font);
-        currentX += wordWidth + spaceWidth;
         this.contentOperations.push(`${spaceWidth} 0 Td`);
       }
     }
@@ -310,7 +300,7 @@ export class PDFPage {
       opacity = 1
     } = options;
 
-    this.saveGraphicsState();
+    console.log(`Drawing rectangle at (${x}, ${y}) with size ${width}x${height}`);
 
     if (opacity < 1) {
       this.setOpacity(opacity);
@@ -336,15 +326,11 @@ export class PDFPage {
     } else if (strokeColor) {
       this.contentOperations.push('S'); // Stroke only
     }
-
-    this.restoreGraphicsState();
   }
 
   drawRoundedRectangle(rect: Rectangle, radius: number, options: DrawOptions = {}): void {
     const { x, y, width, height } = rect;
     const r = Math.min(radius, width / 2, height / 2);
-
-    this.saveGraphicsState();
 
     const {
       lineWidth = 1,
@@ -386,8 +372,6 @@ export class PDFPage {
     } else if (strokeColor) {
       this.contentOperations.push('S');
     }
-
-    this.restoreGraphicsState();
   }
 
   drawLine(from: Point, to: Point, options: DrawOptions = {}): void {
@@ -398,7 +382,7 @@ export class PDFPage {
       opacity = 1
     } = options;
 
-    this.saveGraphicsState();
+    console.log(`Drawing line from (${from.x}, ${from.y}) to (${to.x}, ${to.y})`);
 
     if (opacity < 1) {
       this.setOpacity(opacity);
@@ -415,8 +399,6 @@ export class PDFPage {
     this.contentOperations.push(`${from.x} ${from.y} m`); // Move to start
     this.contentOperations.push(`${to.x} ${to.y} l`); // Line to end
     this.contentOperations.push('S'); // Stroke
-
-    this.restoreGraphicsState();
   }
 
   drawCircle(center: Point, radius: number, options: DrawOptions = {}): void {
@@ -427,7 +409,7 @@ export class PDFPage {
       opacity = 1
     } = options;
 
-    this.saveGraphicsState();
+    console.log(`Drawing circle at (${center.x}, ${center.y}) with radius ${radius}`);
 
     if (opacity < 1) {
       this.setOpacity(opacity);
@@ -460,24 +442,55 @@ export class PDFPage {
     } else if (strokeColor) {
       this.contentOperations.push('S');
     }
-
-    this.restoreGraphicsState();
   }
 
   drawEllipse(center: Point, radiusX: number, radiusY: number, options: DrawOptions = {}): void {
-    this.saveGraphicsState();
+    // For simplicity, we'll draw an ellipse as a scaled circle
+    const {
+      lineWidth = 1,
+      strokeColor,
+      fillColor,
+      opacity = 1
+    } = options;
+
+    if (opacity < 1) {
+      this.setOpacity(opacity);
+    }
+
+    this.contentOperations.push('q'); // Save graphics state
+    this.contentOperations.push(`${radiusX} 0 0 ${radiusY} ${center.x} ${center.y} cm`); // Transform
     
-    // Scale to create ellipse from circle
-    this.scale(radiusX / radiusY, 1);
-    this.drawCircle({ x: center.x * radiusY / radiusX, y: center.y }, radiusY, options);
+    this.contentOperations.push(`${lineWidth} w`);
     
-    this.restoreGraphicsState();
+    if (fillColor) {
+      this.setFillColor(fillColor);
+    }
+    
+    if (strokeColor) {
+      this.setStrokeColor(strokeColor);
+    }
+
+    // Draw unit circle
+    const k = 0.5522847498;
+    this.contentOperations.push(`1 0 m`);
+    this.contentOperations.push(`1 ${k} ${k} 1 0 1 c`);
+    this.contentOperations.push(`${-k} 1 -1 ${k} -1 0 c`);
+    this.contentOperations.push(`-1 ${-k} ${-k} -1 0 -1 c`);
+    this.contentOperations.push(`${k} -1 1 ${-k} 1 0 c`);
+    
+    if (fillColor && strokeColor) {
+      this.contentOperations.push('B');
+    } else if (fillColor) {
+      this.contentOperations.push('f');
+    } else if (strokeColor) {
+      this.contentOperations.push('S');
+    }
+
+    this.contentOperations.push('Q'); // Restore graphics state
   }
 
   drawPolygon(points: Point[], options: DrawOptions = {}): void {
     if (points.length < 3) return;
-
-    this.saveGraphicsState();
 
     const {
       lineWidth = 1,
@@ -514,42 +527,6 @@ export class PDFPage {
     } else if (strokeColor) {
       this.contentOperations.push('S');
     }
-
-    this.restoreGraphicsState();
-  }
-
-  // Transformation operations
-  translate(x: number, y: number): void {
-    const transform = Matrix.translation(x, y);
-    this.applyTransform(transform);
-  }
-
-  scale(sx: number, sy: number): void {
-    const transform = Matrix.scaling(sx, sy);
-    this.applyTransform(transform);
-  }
-
-  rotate(angle: number): void {
-    const transform = Matrix.rotation(angle);
-    this.applyTransform(transform);
-  }
-
-  private applyTransform(matrix: Matrix): void {
-    this.currentTransform = this.currentTransform.multiply(matrix);
-    this.contentOperations.push(matrix.toString());
-  }
-
-  // Graphics state management
-  saveGraphicsState(): void {
-    this.contentOperations.push('q');
-    this.transformStack.push(this.currentTransform);
-  }
-
-  restoreGraphicsState(): void {
-    this.contentOperations.push('Q');
-    if (this.transformStack.length > 0) {
-      this.currentTransform = this.transformStack.pop()!;
-    }
   }
 
   private setOpacity(opacity: number): void {
@@ -582,26 +559,17 @@ export class PDFPage {
     return this.config.size;
   }
 
-  getMargins() {
-    return this.config.margins || { top: 0, right: 0, bottom: 0, left: 0 };
-  }
-
-  getContentArea(): Rectangle {
-    const { width, height } = this.config.size;
-    const margins = this.getMargins();
-    
-    return {
-      x: margins.left || 0,
-      y: margins.bottom || 0,
-      width: width - (margins.left || 0) - (margins.right || 0),
-      height: height - (margins.top || 0) - (margins.bottom || 0)
-    };
+  getPageRef(): PDFRef {
+    return this.id.toRef();
   }
 
   // Content stream generation
   async getContentStream(): Promise<any> {
     const content = this.contentOperations.join('\n');
     const data = new TextEncoder().encode(content);
+    
+    console.log(`Generated content stream with ${this.contentOperations.length} operations`);
+    console.log('Content preview:', content.substring(0, 200) + '...');
     
     return {
       dict: {

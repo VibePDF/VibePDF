@@ -51,7 +51,7 @@ export class PDFObject {
   static serializeValue(value: PDFValue): string {
     if (value === null) return 'null';
     if (typeof value === 'boolean') return value.toString();
-    if (typeof value === 'number') return value.toString();
+    if (typeof value === 'number') return Number.isInteger(value) ? value.toString() : value.toFixed(6);
     if (typeof value === 'string') return PDFObject.serializeString(value);
     if (PDFObject.isRef(value)) return `${value.objectNumber} ${value.generationNumber} R`;
     if (PDFObject.isDict(value)) return PDFObject.serializeDict(value);
@@ -62,8 +62,15 @@ export class PDFObject {
   }
 
   private static serializeString(str: string): string {
-    // Simple implementation - should handle escaping properly
-    return `(${str.replace(/[()\\]/g, '\\$&')})`;
+    // Escape special characters in PDF strings
+    const escaped = str
+      .replace(/\\/g, '\\\\')
+      .replace(/\(/g, '\\(')
+      .replace(/\)/g, '\\)')
+      .replace(/\r/g, '\\r')
+      .replace(/\n/g, '\\n')
+      .replace(/\t/g, '\\t');
+    return `(${escaped})`;
   }
 
   private static serializeDict(dict: PDFDict): string {
@@ -86,7 +93,8 @@ export class PDFObject {
 
   static isRef(value: any): value is PDFRef {
     return value && typeof value === 'object' && 
-           'objectNumber' in value && 'generationNumber' in value;
+           'objectNumber' in value && 'generationNumber' in value &&
+           !Array.isArray(value) && !('dict' in value);
   }
 
   static isDict(value: any): value is PDFDict {
@@ -122,7 +130,7 @@ export class PDFCrossRefTable {
 
   serialize(): string {
     const entries = this.getAllEntries();
-    if (entries.length === 0) return 'xref\n0 0\n';
+    if (entries.length === 0) return 'xref\n0 1\n0000000000 65535 f \n';
 
     let result = 'xref\n';
     result += `0 ${entries.length + 1}\n`;

@@ -8,9 +8,7 @@ import {
   Size, 
   PDFDict,
   PDFError,
-  PageSizes,
-  EncryptionOptions,
-  PDFPermissions
+  PageSizes
 } from '../types/index.js';
 import { PDFObject, PDFObjectId, PDFCrossRefTable } from '../core/PDFObject.js';
 import { PDFPage } from './PDFPage.js';
@@ -113,10 +111,7 @@ export class PDFDocument {
     const pageId = new PDFObjectId(this.crossRefTable.getNextObjectNumber());
     const page = new PDFPage(pageId, pageConfig, this.pageTree!.id.toRef());
     
-    // Add page object to document
-    this.objects.set(pageId.objectNumber, page.getObject());
-    
-    // Update page tree
+    // Update page tree first
     this.updatePageTree(page);
     
     this.pages.push(page);
@@ -128,7 +123,7 @@ export class PDFDocument {
     
     const pageTreeDict = this.pageTree.value as PDFDict;
     const kids = pageTreeDict.Kids as any[];
-    kids.push(page.getObject().id.toRef());
+    kids.push(page.getPageRef());
     pageTreeDict.Count = kids.length;
   }
 
@@ -162,19 +157,25 @@ export class PDFDocument {
   }
 
   async save(): Promise<Uint8Array> {
-    // Add content streams for all pages
+    console.log('Starting PDF save process...');
+    
+    // Add all page objects to the document
     for (const page of this.pages) {
+      const pageObj = page.getObject();
+      this.objects.set(pageObj.id.objectNumber, pageObj);
+      
+      // Add content stream for the page
       const contentStream = await page.getContentStream();
       const contentId = new PDFObjectId(this.crossRefTable.getNextObjectNumber());
       const contentObj = new PDFObject(contentId, contentStream);
       this.objects.set(contentId.objectNumber, contentObj);
       
       // Update page to reference content stream
-      const pageDict = page.getObject().value as PDFDict;
+      const pageDict = pageObj.value as PDFDict;
       pageDict.Contents = contentId.toRef();
     }
 
-    // Add font objects to resources
+    // Add font objects and update page resources
     for (const page of this.pages) {
       const pageDict = page.getObject().value as PDFDict;
       const resources = pageDict.Resources as PDFDict;
@@ -185,6 +186,8 @@ export class PDFDocument {
       }
     }
 
+    console.log(`Total objects to serialize: ${this.objects.size}`);
+    
     this.updateCrossRefTable();
     return this.serialize();
   }
@@ -192,29 +195,37 @@ export class PDFDocument {
   private updateCrossRefTable(): void {
     let offset = 0;
     const header = '%PDF-1.7\n%âãÏÓ\n';
-    offset += header.length;
+    offset += new TextEncoder().encode(header).length;
 
-    // Calculate offsets for all objects
-    for (const [objectNumber, object] of this.objects) {
+    // Calculate offsets for all objects in order
+    const sortedObjects = Array.from(this.objects.entries()).sort(([a], [b]) => a - b);
+    
+    for (const [objectNumber, object] of sortedObjects) {
       this.crossRefTable.addEntry(objectNumber, {
         offset,
         generation: object.id.generationNumber,
         free: false
       });
-      offset += object.toString().length + 1; // +1 for newline
+      
+      const objectString = object.toString() + '\n';
+      offset += new TextEncoder().encode(objectString).length;
     }
   }
 
   private async serialize(): Promise<Uint8Array> {
+    console.log('Serializing PDF...');
+    
     let pdf = '%PDF-1.7\n%âãÏÓ\n';
     
-    // Serialize all objects
-    for (const object of this.objects.values()) {
+    // Serialize all objects in order
+    const sortedObjects = Array.from(this.objects.entries()).sort(([a], [b]) => a - b);
+    
+    for (const [, object] of sortedObjects) {
       pdf += object.toString() + '\n';
     }
 
     // Add cross-reference table
-    const xrefOffset = pdf.length;
+    const xrefOffset = new TextEncoder().encode(pdf).length;
     pdf += this.crossRefTable.serialize();
 
     // Add trailer
@@ -223,6 +234,9 @@ export class PDFDocument {
     // Add xref offset and EOF
     pdf += `startxref\n${xrefOffset}\n%%EOF\n`;
 
+    console.log('PDF serialization complete');
+    console.log(`Final PDF size: ${new TextEncoder().encode(pdf).length} bytes`);
+    
     return new TextEncoder().encode(pdf);
   }
 
