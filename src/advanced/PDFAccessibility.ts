@@ -3,8 +3,8 @@
  * Surpasses all existing PDF libraries with comprehensive accessibility support
  */
 
+import { PDFDocument as VibePDFDocument } from '../document/PDFDocument.js';
 import { 
-  PDFDocument as VibePDFDocument,
   PDFPage,
   PDFError,
   ValidationResult,

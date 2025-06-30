@@ -3,8 +3,8 @@
  * Enterprise workflow capabilities beyond any existing solution
  */
 
+import { PDFDocument as VibePDFDocument } from '../document/PDFDocument.js';
 import { 
-  PDFDocument as VibePDFDocument,
   PDFPage,
   PDFError,
   ValidationResult,

@@ -3,8 +3,8 @@
  * Enterprise-grade security beyond any existing PDF library
  */
 
+import { PDFDocument as VibePDFDocument } from '../document/PDFDocument.js';
 import { 
-  PDFDocument as VibePDFDocument,
   PDFError,
   PDFSecurityError,
   ValidationResult 
