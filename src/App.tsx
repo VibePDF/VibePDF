@@ -629,7 +629,7 @@ function App() {
       {/* Bolt.new Badge - Top */}
       <div className="flex justify-center py-2 bg-white shadow-sm">
         <a href="https://bolt.new" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-1 text-xs text-gray-600 hover:text-gray-900 transition-colors">
-          <span>Built with</span>
+        <span><b>Built with</b></span>
               <img src="/white_circle_360x360.png" alt="Built with Bolt.new" className="h-12" />
         </a>
       </div>
@@ -989,7 +989,7 @@ const generatePDF = async () => {
           {/* Bolt.new Badge - Bottom */}
           <div className="mt-4">
             <a href="https://bolt.new" target="_blank" rel="noopener noreferrer" className="inline-flex items-center space-x-1 text-xs text-gray-500 hover:text-gray-700 transition-colors">
-              <span>Built with</span>
+        <span><b>Built with</b></span>
               <img src="/white_circle_360x360.png" alt="Built with Bolt.new" className="h-13" />
             </a>
           </div>
