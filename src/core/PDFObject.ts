@@ -51,7 +51,7 @@ export class PDFObject {
   static serializeValue(value: PDFValue): string {
     if (value === null) return 'null';
     if (typeof value === 'boolean') return value.toString();
-    if (typeof value === 'number') return Number.isInteger(value) ? value.toString() : value.toFixed(6);
+    if (typeof value === 'number') return PDFObject.formatNumber(value);
     if (typeof value === 'string') return PDFObject.serializeString(value);
     if (PDFObject.isRef(value)) return `${value.objectNumber} ${value.generationNumber} R`;
     if (PDFObject.isDict(value)) return PDFObject.serializeDict(value);
@@ -59,6 +59,17 @@ export class PDFObject {
     if (PDFObject.isStream(value)) return PDFObject.serializeStream(value);
     
     throw new PDFError(`Cannot serialize PDF value: ${typeof value}`);
+  }
+
+  private static formatNumber(num: number): string {
+    // Format numbers to avoid floating point precision issues
+    if (Number.isInteger(num)) {
+      return num.toString();
+    }
+    
+    // Round to 6 decimal places and remove trailing zeros
+    const formatted = num.toFixed(6);
+    return formatted.replace(/\.?0+$/, '');
   }
 
   private static serializeString(str: string): string {
