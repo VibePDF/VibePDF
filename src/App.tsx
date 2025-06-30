@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Download, FileText, Zap, Shield, Palette, Settings, Type, Shapes, Layout, Eye, EyeOff } from 'lucide-react';
+import { Download, FileText, Zap, Shield, Palette, Settings, Type, Shapes, Layout, Eye, EyeOff, ExternalLink } from 'lucide-react';
 import { PDFDocument, StandardFonts, rgb, PageSizes, ColorUtils } from './index.js';
 
 function App() {
@@ -8,13 +8,28 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [demoType, setDemoType] = useState<'basic' | 'advanced' | 'text'>('basic');
   const [showPreview, setShowPreview] = useState(true);
+  const [pdfDataUrl, setPdfDataUrl] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Clear PDF blob when demo type changes
   useEffect(() => {
     setPdfBlob(null);
+    setPdfDataUrl(null);
     setError(null);
   }, [demoType]);
+
+  // Convert blob to data URL for iframe
+  useEffect(() => {
+    if (pdfBlob) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPdfDataUrl(reader.result as string);
+      };
+      reader.readAsDataURL(pdfBlob);
+    } else {
+      setPdfDataUrl(null);
+    }
+  }, [pdfBlob]);
 
   const generateBasicPDF = useCallback(async () => {
     setIsGenerating(true);
@@ -723,7 +738,7 @@ function App() {
                   onClick={openPDFInNewTab}
                   className="bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg flex items-center justify-center space-x-2"
                 >
-                  <Eye className="w-5 h-5" />
+                  <ExternalLink className="w-5 h-5" />
                   <span>Open in New Tab</span>
                 </button>
               </>
@@ -748,31 +763,69 @@ function App() {
               
               {showPreview && (
                 <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
-                  <iframe
-                    ref={iframeRef}
-                    src={`${URL.createObjectURL(pdfBlob)}#toolbar=0&navpanes=0&scrollbar=0`}
-                    className="w-full h-96"
-                    title="PDF Preview"
-                    style={{ 
-                      minHeight: '600px',
-                      border: 'none'
-                    }}
-                    sandbox="allow-same-origin allow-scripts"
-                  />
+                  {pdfDataUrl ? (
+                    <iframe
+                      ref={iframeRef}
+                      src={pdfDataUrl}
+                      className="w-full h-96"
+                      title="PDF Preview"
+                      style={{ 
+                        minHeight: '600px',
+                        border: 'none'
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-96 flex items-center justify-center bg-gray-100">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-gray-600">Loading PDF preview...</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <p className="text-sm text-green-700 font-medium">
-                    PDF generated successfully! 
+              <div className="mt-4 space-y-3">
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <p className="text-sm text-green-700 font-medium">
+                      PDF generated successfully! 
+                    </p>
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">
+                    Content is rendering correctly. The PDF contains all the expected elements and formatting.
                   </p>
                 </div>
-                <p className="text-xs text-green-600 mt-1">
-                  Content is rendering correctly. If you see drawing tools, they're from your browser's PDF viewer - not our library.
-                  Try "Open in New Tab" for a cleaner view or download the PDF to view in your preferred PDF reader.
-                </p>
+
+                {!pdfDataUrl && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <p className="text-sm text-blue-700 font-medium">
+                        Browser Security Notice
+                      </p>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-1">
+                      If the preview doesn't load, this is due to browser security restrictions. 
+                      Use "Open in New Tab" or "Download PDF" to view the generated document.
+                    </p>
+                  </div>
+                )}
+
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                    <p className="text-sm text-gray-700 font-medium">
+                      Viewing Options
+                    </p>
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1 space-y-1">
+                    <p>• <strong>Preview:</strong> View embedded in this page (may have browser limitations)</p>
+                    <p>• <strong>New Tab:</strong> Open in a clean browser tab with full PDF viewer controls</p>
+                    <p>• <strong>Download:</strong> Save to your device for viewing in any PDF reader</p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
