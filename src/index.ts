@@ -8,6 +8,9 @@ export { PDFDocument } from './document/PDFDocument.js';
 export { PDFPage } from './document/PDFPage.js';
 export { PDFFont } from './fonts/PDFFont.js';
 
+// Import CompressionType as a value since it's used in PRESETS
+import { CompressionType } from './types/index.js';
+
 // Core types and interfaces
 export {
   type PDFMetadata,
@@ -40,7 +43,6 @@ export {
   type PDFImportOptions,
   StandardFonts,
   PageSizes,
-  CompressionType,
   ComplianceLevel,
   BlendMode,
   RenderingBackend,
@@ -51,6 +53,9 @@ export {
   PDFRenderError,
   PDFCompressionError
 } from './types/index.js';
+
+// Export CompressionType as a value
+export { CompressionType };
 
 // Advanced features
 export { PDFParser } from './parsing/PDFParser.js';
