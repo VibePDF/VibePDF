@@ -3,13 +3,13 @@
  */
 
 import { 
-  PDFDocument as VibePDFDocument,
   PDFPage,
   PDFFont,
   ValidationResult,
   PerformanceMetrics,
   PDFError 
 } from '../types/index.js';
+import { PDFDocument as VibePDFDocument } from '../document/PDFDocument.js';
 import { PerformanceMonitor } from '../utils/PerformanceUtils.js';
 import { PDFValidator } from '../utils/ValidationUtils.js';
 
