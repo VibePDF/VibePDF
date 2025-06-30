@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Download, FileText, Zap, Shield, Palette, Settings, Type, Shapes, Layout, Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { Download, FileText, Zap, Shield, Palette, Settings, Type, Shapes, Layout, Eye, EyeOff, ExternalLink, Github } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { PDFDocument, StandardFonts, rgb, PageSizes, ColorUtils } from './index.js';
 
 function App() {
@@ -302,7 +303,7 @@ function App() {
         align: 'justify',
         backgroundColor: rgb(0.98, 0.98, 0.98),
         borderColor: rgb(0.8, 0.8, 0.8),
-        padding: { top: 10, right: 10, bottom: 10, left: 10 }
+        padding: { top: 8, right: 12, bottom: 8, left: 12 }
       });
 
       page.drawTextBlock(col2Text, {
@@ -314,7 +315,7 @@ function App() {
         align: 'justify',
         backgroundColor: rgb(0.98, 0.98, 0.98),
         borderColor: rgb(0.8, 0.8, 0.8),
-        padding: { top: 10, right: 10, bottom: 10, left: 10 }
+        padding: { top: 8, right: 12, bottom: 8, left: 12 }
       });
 
       // Footer
@@ -648,9 +649,26 @@ function App() {
                 <p className="text-gray-600 text-sm">Enterprise TypeScript PDF Library</p>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-500">Version 1.0.0</div>
-              <div className="text-xs text-gray-400">TypeScript 5.8.3</div>
+            <div className="flex items-center space-x-4">
+              <a 
+                href="https://github.com/VibePDF/VibePDF" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                <Github className="w-5 h-5" />
+                <span className="hidden sm:inline">GitHub</span>
+              </a>
+              <Link 
+                to="/demo" 
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                View Demo
+              </Link>
+              <div className="text-right">
+                <div className="text-sm text-gray-500">Version 1.0.0</div>
+                <div className="text-xs text-gray-400">TypeScript 5.8.3</div>
+              </div>
             </div>
           </div>
         </div>
@@ -872,7 +890,7 @@ function App() {
               {
                 icon: <Settings className="w-8 h-8 text-red-600" />,
                 title: 'Standards Compliance',
-                description: 'Full PDF 2.0, PDF/A, PDF/UA, and PDF/X compliance for accessibility and archiving.'
+                description: 'Advanced PDF/A, PDF/UA, PDF/X support for accessibility and archiving.'
               },
               {
                 icon: <Layout className="w-8 h-8 text-indigo-600" />,
@@ -951,6 +969,16 @@ const generatePDF = async () => {
       {/* Footer */}
       <footer className="bg-white border-t border-gray-100 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
+          <div className="flex justify-center space-x-6 mb-4">
+            <a 
+              href="https://github.com/VibePDF/VibePDF" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              <Github className="w-6 h-6" />
+            </a>
+          </div>
           <p className="text-gray-600">
             VibePDF v1.0.0 - Enterprise TypeScript PDF Library
           </p>
