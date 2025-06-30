@@ -1,18 +1,19 @@
 import React, { useState, useCallback } from 'react';
-import { Download, FileText, Zap, Shield, Palette, Settings } from 'lucide-react';
+import { Download, FileText, Zap, Shield, Palette, Settings, Type, Shapes, Layout } from 'lucide-react';
 import { PDFDocument, StandardFonts, rgb, PageSizes, ColorUtils } from './index.js';
 
 function App() {
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [demoType, setDemoType] = useState<'basic' | 'advanced' | 'text'>('basic');
 
-  const generateSimplePDF = useCallback(async () => {
+  const generateBasicPDF = useCallback(async () => {
     setIsGenerating(true);
     setError(null);
     
     try {
-      console.log('Starting PDF generation...');
+      console.log('Starting basic PDF generation...');
       
       const doc = await PDFDocument.create({
         title: 'VibePDF Demo Document',
@@ -165,6 +166,397 @@ function App() {
     }
   }, []);
 
+  const generateAdvancedPDF = useCallback(async () => {
+    setIsGenerating(true);
+    setError(null);
+    
+    try {
+      const doc = await PDFDocument.create({
+        title: 'VibePDF Advanced Features Demo',
+        author: 'VibePDF Library',
+        subject: 'Advanced drawing and layout capabilities'
+      });
+
+      const page = doc.addPage(PageSizes.A4);
+      const font = await doc.embedFont(StandardFonts.HelveticaBold);
+      page.addFont(font);
+
+      // Title with background
+      page.drawTextBlock('Advanced VibePDF Features', {
+        x: 50,
+        y: 750,
+        size: 20,
+        font: StandardFonts.HelveticaBold,
+        color: ColorUtils.WHITE,
+        backgroundColor: rgb(0.1, 0.3, 0.8),
+        padding: { top: 15, right: 20, bottom: 15, left: 20 },
+        maxWidth: 500
+      });
+
+      // Rounded rectangles
+      page.drawRoundedRectangle(
+        { x: 50, y: 600, width: 150, height: 80 },
+        10,
+        { fillColor: rgb(0.9, 0.95, 1), strokeColor: rgb(0.1, 0.3, 0.8), lineWidth: 2 }
+      );
+
+      page.drawText('Rounded\nRectangles', {
+        x: 75,
+        y: 650,
+        size: 12,
+        font: StandardFonts.HelveticaBold,
+        color: rgb(0.1, 0.3, 0.8),
+        align: 'center'
+      });
+
+      // Ellipse
+      page.drawEllipse(
+        { x: 300, y: 640 },
+        60, 40,
+        { fillColor: rgb(1, 0.8, 0.2), strokeColor: rgb(0.8, 0.4, 0), lineWidth: 2 }
+      );
+
+      page.drawText('Ellipses', {
+        x: 275,
+        y: 645,
+        size: 12,
+        font: StandardFonts.HelveticaBold,
+        color: rgb(0.8, 0.4, 0)
+      });
+
+      // Polygon (triangle)
+      page.drawPolygon([
+        { x: 450, y: 600 },
+        { x: 500, y: 680 },
+        { x: 400, y: 680 }
+      ], {
+        fillColor: rgb(0.8, 0.2, 0.2),
+        strokeColor: rgb(0.6, 0.1, 0.1),
+        lineWidth: 2
+      });
+
+      page.drawText('Polygons', {
+        x: 430,
+        y: 590,
+        size: 12,
+        font: StandardFonts.HelveticaBold,
+        color: rgb(0.6, 0.1, 0.1)
+      });
+
+      // Transparency demonstration
+      page.drawText('Transparency Effects:', {
+        x: 50,
+        y: 520,
+        size: 16,
+        font: StandardFonts.HelveticaBold,
+        color: ColorUtils.BLACK
+      });
+
+      // Overlapping circles with transparency
+      page.drawCircle({ x: 100, y: 450 }, 30, { fillColor: rgb(1, 0, 0), opacity: 0.5 });
+      page.drawCircle({ x: 130, y: 450 }, 30, { fillColor: rgb(0, 1, 0), opacity: 0.5 });
+      page.drawCircle({ x: 115, y: 420 }, 30, { fillColor: rgb(0, 0, 1), opacity: 0.5 });
+
+      // Complex layout demonstration
+      page.drawText('Complex Layout Example:', {
+        x: 50,
+        y: 350,
+        size: 16,
+        font: StandardFonts.HelveticaBold,
+        color: ColorUtils.BLACK
+      });
+
+      // Multi-column layout simulation
+      const col1Text = 'This is the first column of text. It demonstrates how VibePDF can handle complex layouts with multiple columns and proper text flow.';
+      const col2Text = 'This is the second column. Notice how the text wraps properly and maintains consistent spacing and alignment throughout the document.';
+
+      page.drawTextBlock(col1Text, {
+        x: 50,
+        y: 320,
+        maxWidth: 200,
+        size: 10,
+        font: StandardFonts.Helvetica,
+        align: 'justify',
+        backgroundColor: rgb(0.98, 0.98, 0.98),
+        borderColor: rgb(0.8, 0.8, 0.8),
+        padding: { top: 10, right: 10, bottom: 10, left: 10 }
+      });
+
+      page.drawTextBlock(col2Text, {
+        x: 300,
+        y: 320,
+        maxWidth: 200,
+        size: 10,
+        font: StandardFonts.Helvetica,
+        align: 'justify',
+        backgroundColor: rgb(0.98, 0.98, 0.98),
+        borderColor: rgb(0.8, 0.8, 0.8),
+        padding: { top: 10, right: 10, bottom: 10, left: 10 }
+      });
+
+      // Footer
+      page.drawText('Generated with VibePDF v1.0.0 - Advanced Features', {
+        x: 50,
+        y: 50,
+        size: 10,
+        color: rgb(0.5, 0.5, 0.5),
+        font: StandardFonts.Helvetica
+      });
+
+      const pdfBytes = await doc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      setPdfBlob(blob);
+      
+    } catch (error) {
+      console.error('Error generating advanced PDF:', error);
+      setError(`Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, []);
+
+  const generateTextDemo = useCallback(async () => {
+    setIsGenerating(true);
+    setError(null);
+    
+    try {
+      const doc = await PDFDocument.create({
+        title: 'VibePDF Text Features Demo',
+        author: 'VibePDF Library',
+        subject: 'Text wrapping, alignment, and typography'
+      });
+
+      const page = doc.addPage(PageSizes.A4);
+      const font = await doc.embedFont(StandardFonts.HelveticaBold);
+      page.addFont(font);
+
+      // Title
+      page.drawText('Typography & Text Layout Demo', {
+        x: 50,
+        y: 750,
+        size: 24,
+        font: StandardFonts.HelveticaBold,
+        color: rgb(0.1, 0.3, 0.8)
+      });
+
+      // Left aligned text
+      page.drawText('Left Aligned Text:', {
+        x: 50,
+        y: 700,
+        size: 14,
+        font: StandardFonts.HelveticaBold,
+        color: ColorUtils.BLACK
+      });
+
+      const leftText = 'This is a demonstration of left-aligned text with automatic word wrapping. The text will flow naturally from line to line while maintaining proper spacing and readability.';
+      
+      page.drawText(leftText, {
+        x: 50,
+        y: 680,
+        maxWidth: 200,
+        size: 11,
+        font: StandardFonts.Helvetica,
+        align: 'left',
+        lineHeight: 14
+      });
+
+      // Center aligned text
+      page.drawText('Center Aligned Text:', {
+        x: 300,
+        y: 700,
+        size: 14,
+        font: StandardFonts.HelveticaBold,
+        color: ColorUtils.BLACK
+      });
+
+      const centerText = 'This text is center-aligned and demonstrates how VibePDF handles text alignment with proper word wrapping and spacing.';
+      
+      page.drawText(centerText, {
+        x: 300,
+        y: 680,
+        maxWidth: 200,
+        size: 11,
+        font: StandardFonts.Helvetica,
+        align: 'center',
+        lineHeight: 14
+      });
+
+      // Right aligned text
+      page.drawText('Right Aligned Text:', {
+        x: 50,
+        y: 580,
+        size: 14,
+        font: StandardFonts.HelveticaBold,
+        color: ColorUtils.BLACK
+      });
+
+      const rightText = 'This text demonstrates right alignment with proper word wrapping and consistent spacing throughout the text block.';
+      
+      page.drawText(rightText, {
+        x: 50,
+        y: 560,
+        maxWidth: 200,
+        size: 11,
+        font: StandardFonts.Helvetica,
+        align: 'right',
+        lineHeight: 14
+      });
+
+      // Justified text
+      page.drawText('Justified Text:', {
+        x: 300,
+        y: 580,
+        size: 14,
+        font: StandardFonts.HelveticaBold,
+        color: ColorUtils.BLACK
+      });
+
+      const justifiedText = 'This text is justified, meaning it aligns to both left and right margins by adjusting the spacing between words. This creates a clean, professional appearance.';
+      
+      page.drawText(justifiedText, {
+        x: 300,
+        y: 560,
+        maxWidth: 200,
+        size: 11,
+        font: StandardFonts.Helvetica,
+        align: 'justify',
+        lineHeight: 14
+      });
+
+      // Text blocks with styling
+      page.drawText('Styled Text Blocks:', {
+        x: 50,
+        y: 450,
+        size: 16,
+        font: StandardFonts.HelveticaBold,
+        color: ColorUtils.BLACK
+      });
+
+      // Info box
+      page.drawTextBlock('Information Box', {
+        x: 50,
+        y: 420,
+        maxWidth: 150,
+        size: 12,
+        font: StandardFonts.HelveticaBold,
+        color: rgb(0.1, 0.4, 0.7),
+        backgroundColor: rgb(0.9, 0.95, 1),
+        borderColor: rgb(0.1, 0.4, 0.7),
+        borderWidth: 2,
+        padding: { top: 10, right: 15, bottom: 10, left: 15 }
+      });
+
+      page.drawTextBlock('This is an informational text block with custom styling, background color, and border.', {
+        x: 50,
+        y: 380,
+        maxWidth: 150,
+        size: 10,
+        font: StandardFonts.Helvetica,
+        backgroundColor: rgb(0.98, 0.99, 1),
+        borderColor: rgb(0.8, 0.85, 0.9),
+        padding: { top: 8, right: 12, bottom: 8, left: 12 }
+      });
+
+      // Warning box
+      page.drawTextBlock('Warning', {
+        x: 250,
+        y: 420,
+        maxWidth: 150,
+        size: 12,
+        font: StandardFonts.HelveticaBold,
+        color: rgb(0.8, 0.4, 0),
+        backgroundColor: rgb(1, 0.95, 0.8),
+        borderColor: rgb(0.8, 0.4, 0),
+        borderWidth: 2,
+        padding: { top: 10, right: 15, bottom: 10, left: 15 }
+      });
+
+      page.drawTextBlock('This is a warning text block with orange styling to draw attention to important information.', {
+        x: 250,
+        y: 380,
+        maxWidth: 150,
+        size: 10,
+        font: StandardFonts.Helvetica,
+        backgroundColor: rgb(1, 0.98, 0.9),
+        borderColor: rgb(0.9, 0.7, 0.4),
+        padding: { top: 8, right: 12, bottom: 8, left: 12 }
+      });
+
+      // Error box
+      page.drawTextBlock('Error', {
+        x: 450,
+        y: 420,
+        maxWidth: 100,
+        size: 12,
+        font: StandardFonts.HelveticaBold,
+        color: ColorUtils.WHITE,
+        backgroundColor: rgb(0.8, 0.1, 0.1),
+        padding: { top: 10, right: 15, bottom: 10, left: 15 }
+      });
+
+      page.drawTextBlock('Critical error message with red styling.', {
+        x: 450,
+        y: 380,
+        maxWidth: 100,
+        size: 10,
+        font: StandardFonts.Helvetica,
+        backgroundColor: rgb(1, 0.9, 0.9),
+        borderColor: rgb(0.8, 0.1, 0.1),
+        padding: { top: 8, right: 12, bottom: 8, left: 12 }
+      });
+
+      // Different font sizes
+      page.drawText('Font Size Variations:', {
+        x: 50,
+        y: 280,
+        size: 16,
+        font: StandardFonts.HelveticaBold,
+        color: ColorUtils.BLACK
+      });
+
+      const sizes = [8, 10, 12, 14, 16, 18, 20, 24];
+      sizes.forEach((size, index) => {
+        page.drawText(`${size}pt text sample`, {
+          x: 50,
+          y: 250 - (index * (size + 4)),
+          size,
+          font: StandardFonts.Helvetica,
+          color: rgb(0.2, 0.2, 0.2)
+        });
+      });
+
+      // Footer
+      page.drawText('Generated with VibePDF v1.0.0 - Typography Demo', {
+        x: 50,
+        y: 50,
+        size: 10,
+        color: rgb(0.5, 0.5, 0.5),
+        font: StandardFonts.Helvetica
+      });
+
+      const pdfBytes = await doc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      setPdfBlob(blob);
+      
+    } catch (error) {
+      console.error('Error generating text demo PDF:', error);
+      setError(`Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, []);
+
+  const generatePDF = useCallback(() => {
+    switch (demoType) {
+      case 'advanced':
+        return generateAdvancedPDF();
+      case 'text':
+        return generateTextDemo();
+      default:
+        return generateBasicPDF();
+    }
+  }, [demoType, generateBasicPDF, generateAdvancedPDF, generateTextDemo]);
+
   const downloadPDF = useCallback(() => {
     if (!pdfBlob) return;
     
@@ -172,7 +564,7 @@ function App() {
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'vibepdf-demo.pdf';
+      a.download = `vibepdf-${demoType}-demo.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -181,7 +573,7 @@ function App() {
       console.error('Error downloading PDF:', error);
       setError(`Error downloading PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }, [pdfBlob]);
+  }, [pdfBlob, demoType]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -224,15 +616,55 @@ function App() {
               <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
+
+          {/* Demo Type Selection */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Choose Demo Type:</h3>
+            <div className="flex flex-wrap justify-center gap-4">
+              <button
+                onClick={() => setDemoType('basic')}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  demoType === 'basic'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <FileText className="w-5 h-5" />
+                <span>Basic Features</span>
+              </button>
+              <button
+                onClick={() => setDemoType('advanced')}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  demoType === 'advanced'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <Shapes className="w-5 h-5" />
+                <span>Advanced Graphics</span>
+              </button>
+              <button
+                onClick={() => setDemoType('text')}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                  demoType === 'text'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <Type className="w-5 h-5" />
+                <span>Typography</span>
+              </button>
+            </div>
+          </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <button
-              onClick={generateSimplePDF}
+              onClick={generatePDF}
               disabled={isGenerating}
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
               <FileText className="w-5 h-5" />
-              <span>{isGenerating ? 'Generating...' : 'Generate Demo PDF'}</span>
+              <span>{isGenerating ? 'Generating...' : `Generate ${demoType.charAt(0).toUpperCase() + demoType.slice(1)} Demo`}</span>
             </button>
             
             {pdfBlob && (
@@ -291,7 +723,7 @@ function App() {
                 description: 'AES-256 encryption, digital signatures, password protection, and permission management.'
               },
               {
-                icon: <Palette className="w-8 h-8 text-orange-600" />,
+                icon: <Type className="w-8 h-8 text-orange-600" />,
                 title: 'Advanced Typography',
                 description: 'Font embedding, subsetting, Unicode support, CJK languages, and RTL text handling.'
               },
@@ -301,7 +733,7 @@ function App() {
                 description: 'Full PDF 2.0, PDF/A, PDF/UA, and PDF/X compliance for accessibility and archiving.'
               },
               {
-                icon: <FileText className="w-8 h-8 text-indigo-600" />,
+                icon: <Layout className="w-8 h-8 text-indigo-600" />,
                 title: 'Interactive Forms',
                 description: 'Complete AcroForm support, XFA handling, dynamic form generation and flattening.'
               }
@@ -345,16 +777,25 @@ const generatePDF = async () => {
   const page = doc.addPage(PageSizes.A4);
   const font = await doc.embedFont(StandardFonts.HelveticaBold);
   
+  // Advanced text with wrapping and alignment
   page.drawText('Hello from VibePDF!', {
-    x: 50,
-    y: 750,
-    font,
-    size: 24,
-    color: rgb(0.1, 0.3, 0.8)
+    x: 50, y: 750, font, size: 24,
+    color: rgb(0.1, 0.3, 0.8),
+    maxWidth: 400,
+    align: 'center'
   });
   
-  page.drawRectangle(
-    { x: 50, y: 600, width: 200, height: 100 },
+  // Styled text blocks
+  page.drawTextBlock('Information Box', {
+    x: 50, y: 650, maxWidth: 200,
+    backgroundColor: rgb(0.9, 0.95, 1),
+    borderColor: rgb(0.1, 0.3, 0.8),
+    padding: { top: 15, right: 20, bottom: 15, left: 20 }
+  });
+  
+  // Advanced shapes
+  page.drawRoundedRectangle(
+    { x: 300, y: 600, width: 200, height: 100 }, 15,
     { fillColor: rgb(0.9, 0.95, 1), strokeColor: rgb(0.1, 0.3, 0.8) }
   );
   
