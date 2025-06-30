@@ -630,7 +630,7 @@ function App() {
       <div className="flex justify-center py-2 bg-white shadow-sm">
         <a href="https://bolt.new" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-1 text-xs text-gray-600 hover:text-gray-900 transition-colors">
           <span>Built with</span>
-              <img src="/white_circle_360x360.png" alt="Built with Bolt.new" className="h-11" />
+              <img src="/white_circle_360x360.png" alt="Built with Bolt.new" className="h-12" />
         </a>
       </div>
 
